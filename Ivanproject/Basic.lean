@@ -5,3 +5,5 @@ universe u
 suppress_compilation
 
 variable (R : Type u) [CommRing R]
+
+-- Ivan is the best

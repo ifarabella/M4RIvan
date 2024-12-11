@@ -19,3 +19,8 @@ lemma foo' : Function.Surjective (Submodule.mkQ N) := by exact Submodule.mkQ_sur
 
 lemma foo'' (N : Type) [AddCommGroup N] [Module R N] (g : M ≃ₗ[R] N) : Module.Projective R N := by
     sorry
+
+variable (R S M N : Type) [CommRing R] [CommRing S] [AddCommGroup M] [AddCommGroup N] [Module R M]
+    [Module R N] [Module S M] [Module S N] [Algebra R S] (f : M ≃ₗ[R] N)
+
+example : M ≃ₗ[S] N := by exact? sorry

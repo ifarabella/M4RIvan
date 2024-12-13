@@ -50,10 +50,13 @@ def myModA (M : Submodule R (R ⊗[R₀] V₀)) :
   Submodule R (S ⊗[R] (R ⊗[R₀] V₀)) :=
   LinearMap.range ((Submodule.subtype M).lTensor S)
 
+/- **Might not need**
 instance basechangequotProj (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :
   Module.Projective S (S ⊗[R₀] ((R ⊗[R₀] V₀)⧸M)) := by
   let _ : Module.Projective R₀ (R ⊗[↑R₀] V₀ ⧸ M) := by sorry -- **FALSE!**
   exact Module.Projective.tensorProduct
+-/
+
 --def myModB (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V₀) :=
   --letI := f.right.toAlgebra
   --haveI : IsScalarTower R₀ R S := .of_algebraMap_eq' f.w
@@ -109,24 +112,18 @@ def myModMap' (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V�
 variable (S) in
 omit [Module.Projective (↑R₀) V₀] [IsScalarTower ↑R₀ ↑R.right ↑S.right] in
 lemma mapsurj (M : Submodule R (R ⊗[R₀] V₀)) :
-    Function.Surjective ((Submodule.mkQ M).lTensor S) :=
+    Function.Surjective ((Submodule.mkQ M).baseChange S) :=
   LinearMap.lTensor_surjective (↑S.right) (Submodule.mkQ_surjective M )
-
--- missing from the library -- trick someone else into proving it?
-lemma LinearMap.lTensor_exact (R S A B C : Type) [CommRing R] [CommRing S] [Algebra R S]
-    [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
-    [Module R A] [Module R B] [Module R C] (f : A →ₗ[R] B) (g : B →ₗ[R] C)
-    (h : Function.Exact f g) : Function.Exact (f.lTensor S) (g.lTensor S) := by
-  sorry
 
 variable (S) in
 omit [Module.Projective (↑R₀) V₀] [IsScalarTower ↑R₀ ↑R.right ↑S.right] in
 lemma mapexact (M : Submodule R (R ⊗[R₀] V₀)) :
-    Function.Exact ((Submodule.subtype M).lTensor S) ((Submodule.mkQ M).lTensor S) := by
+    Function.Exact ((Submodule.subtype M).baseChange S) ((Submodule.mkQ M).baseChange S) := by
   have foo : Function.Exact (Submodule.subtype M) (Submodule.mkQ M) := LinearMap.exact_subtype_mkQ M
-  exact
-    LinearMap.lTensor_exact (↑R.right) (↑S.right) (↥M) (↑R.right ⊗[↑R₀] V₀) (↑R.right ⊗[↑R₀] V₀ ⧸ M)
-      M.subtype M.mkQ foo
+  have foo' : Function.Surjective (Submodule.mkQ M) := Submodule.mkQ_surjective M
+  exact lTensor_exact S foo foo'
+    --LinearMap.lTensor_exact' (↑R.right) (↑S.right) (↥M) (↑R.right ⊗[↑R₀] V₀) (↑R.right ⊗[↑R₀] V₀ ⧸ M)
+      --M.subtype M.mkQ foo
 
 -- instance :
 --     Module R (S ⊗[R] (R ⊗[R₀] V₀)) :=
@@ -149,8 +146,21 @@ lemma equiv1 (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : ((S ⊗[R] (R �
   Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M)
 -/
 lemma projlem {R M N : Type} [CommRing R] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
-    [Module.Projective R M] (f : M ≃ₗ[R] N) : Module.Projective R N := by sorry
+    [Module.Projective R M] (f : M ≃ₗ[R] N) : Module.Projective R N := by
+  apply Module.Projective.of_lifting_property''
+  intro f g
+  have h : Module.Projective R M := inferInstance
 
+  sorry
+
+omit [Module.Projective (↑R₀) V₀] in
+lemma mymodeq (M : Submodule R (R ⊗[R₀] V₀)) : Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) =
+  myModMap' V₀ R₀ S M := by
+  rw [myModMap', LinearMap.range_comp]
+  rfl
+
+omit [Module.Projective (↑R₀) V₀] in
 lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :
     Module.Projective S ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) := by
   refine projlem (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
@@ -160,16 +170,23 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
   -/
   have h1 := (mapexact V₀ R₀ S M)
   let foo := (Function.Exact.linearEquivOfSurjective (M := ↑S.right ⊗[↑R.right] ↥M) (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M)).symm
-  -- want: S-module iso, have foo: R-module iso :-(
+  -- want: S-module iso, have foo: R-module iso :-( **now its an S-module iso yay**
   -- `foo` not strong enough :-(
-  -- refine foo ≪≫ₗ ?_
+  refine foo ≪≫ₗ ?_
+  let foo' := Submodule.Quotient.equiv
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype))
+    (myModMap' V₀ R₀ S M)
+    (AlgebraTensorModule.cancelBaseChange R₀ R S S V₀)
+    (mymodeq V₀ R₀ M)
+  exact foo'
   --refine ?_ ∘ₗ foo.symm
   --refine ?_ ∘ₗ (Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M))
-  sorry
+
 --  refine projlem ((LinearEquiv.symm
 --    ((Submodule.Quotient.equiv ?_ ?_ ?_ ?_) ∘ₗ (Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M)))))
   --need to insert a map from '(S ⊗[R] (R ⊗[R0] V0)) ⧸ myModmap'' to (S ⊗[R₀] V₀) ⧸ M
 --projlem (basechangequotProj V₀ R₀ M) (LinearEquiv.symm ((Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M))))
+
 /-
 lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
     [∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d] :

@@ -23,4 +23,4 @@ lemma foo'' (N : Type) [AddCommGroup N] [Module R N] (g : M ≃ₗ[R] N) : Modul
 variable (R S M N : Type) [CommRing R] [CommRing S] [AddCommGroup M] [AddCommGroup N] [Module R M]
     [Module R N] [Module S M] [Module S N] [Algebra R S] (f : M ≃ₗ[R] N)
 
-example : M ≃ₗ[S] N := by exact? sorry
+example : M ≃ₗ[S] N := by  sorry

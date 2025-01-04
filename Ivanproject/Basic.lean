@@ -41,8 +41,6 @@ def myFunctorish (R : Under R₀) : Type := {M : Submodule R (R ⊗[R₀] V₀) 
 
 variable {R S : Under R₀} [Algebra R S] [IsScalarTower R₀ R S]
 
-set_option synthInstance.maxHeartbeats 100000
-
 instance foo (M : Submodule R (R ⊗[R₀] V₀)) : AddCommMonoid ((R ⊗[R₀] V₀)⧸M) := by exact
   SubtractionCommMonoid.toAddCommMonoid
 
@@ -139,7 +137,6 @@ lemma mapexact (M : Submodule R (R ⊗[R₀] V₀)) :
 
 -- instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] :
 --     Module (↑R.right) (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype)) := by sorry
-set_option maxHeartbeats 1000000
 /-
 lemma equiv1 (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : ((S ⊗[R] (R ⊗[R₀] V₀)) ⧸ (LinearMap.range ((Submodule.subtype M).lTensor S)))
     ≃ₗ[R] (S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M)) :=
@@ -147,11 +144,10 @@ lemma equiv1 (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : ((S ⊗[R] (R �
 -/
 lemma projlem {R M N : Type} [CommRing R] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
     [Module.Projective R M] (f : M ≃ₗ[R] N) : Module.Projective R N := by
-  apply Module.Projective.of_lifting_property''
-  intro f g
-  have h : Module.Projective R M := inferInstance
-
-  sorry
+  --apply Module.Projective.of_lifting_property''
+  --intro g1 g2
+  --have h : Module.Projective R M := inferInstance
+  exact Module.Projective.of_equiv f
 
 omit [Module.Projective (↑R₀) V₀] in
 lemma mymodeq (M : Submodule R (R ⊗[R₀] V₀)) : Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
@@ -163,13 +159,14 @@ lemma mymodeq (M : Submodule R (R ⊗[R₀] V₀)) : Submodule.map (AlgebraTenso
 omit [Module.Projective (↑R₀) V₀] in
 lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :
     Module.Projective S ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) := by
-  refine projlem (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
+  refine Module.Projective.of_equiv  (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
+  --refine projlem (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
   /-
   mapexact (V₀ : Type) (R₀ : CommRingCat) [AddCommGroup V₀] [Module (↑R₀) V₀] [Module.Projective (↑R₀) V₀]
   {R S : Under R₀} (M : Submodule (↑R.right) (↑R.right ⊗[↑R₀] V₀)) [Module ↑R.right ↑S.right] :
   -/
   have h1 := (mapexact V₀ R₀ S M)
-  let foo := (Function.Exact.linearEquivOfSurjective (M := ↑S.right ⊗[↑R.right] ↥M) (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M)).symm
+  let foo := (Function.Exact.linearEquivOfSurjective (M := S ⊗[R] ↥M) (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M)).symm
   -- want: S-module iso, have foo: R-module iso :-( **now its an S-module iso yay**
   -- `foo` not strong enough :-(
   refine foo ≪≫ₗ ?_
@@ -187,8 +184,56 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
   --need to insert a map from '(S ⊗[R] (R ⊗[R0] V0)) ⧸ myModmap'' to (S ⊗[R₀] V₀) ⧸ M
 --projlem (basechangequotProj V₀ R₀ M) (LinearEquiv.symm ((Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M))))
 
+-- pull back prime of S to prime of R
+variable (R S : Type) [CommRing R] [CommRing S] [Algebra R S]
+    (Q : PrimeSpectrum S) (P : PrimeSpectrum R)
+    -- P = f^{-1}(Q) where f : R → S is `algebraMap R S`
+    -- exact? found the way to pull back Q to Spec(R)
+--    (h : P = (algebraMap R S).specComap Q)
+    (h' : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal)
+
+noncomputable example : Localization.AtPrime P.asIdeal →+*
+    Localization.AtPrime Q.asIdeal :=
+  -- `exact?` found the map from R_P to S_Q if P := f^{-1}(Q), f : R → S
+  Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h'
+
+-- R_P is automatically an R-algebra
+#synth Algebra R (Localization.AtPrime P.asIdeal)
+
+#synth Algebra R (Localization.AtPrime Q.asIdeal) -- in fact S_Q is an R-algebra already!
+
+
+
+-- is this right? Not entirely sure. It *works* but there's no API for it.
+example : R →+* Localization.AtPrime P.asIdeal := OreLocalization.numeratorRingHom
+-- Question: is there a better name for R -> R_P when R is commutative?
+-- Answer yes: R_P is known by typeclass inference to be an R-algebra automatically
+-- so it's actually called
+example : R →+* Localization.AtPrime P.asIdeal := algebraMap R (Localization.AtPrime P.asIdeal)
+
+#check Localization.localRingHom_to_map P.asIdeal Q.asIdeal (algebraMap R S) h'
 /-
-lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
-    [∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d] :
-    ∀ P : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ M)) P = d := by sorry
+∀ (x : R),
+  (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) ⋯)
+      ((algebraMap R (Localization.AtPrime P.asIdeal)) x) =
+    (algebraMap S (Localization.AtPrime Q.asIdeal)) ((algebraMap R S) x)
+
+i.e. the map R -> R_P and then the map R_P -> S_Q equals the map R -> S and then the map S -> S_Q
+all evaluated at x
+
 -/
+-- square R -> S -> S_Q and R -> R_P -> S_Q commutes
+example : ((algebraMap S (Localization.AtPrime Q.asIdeal)).comp (algebraMap R S) :
+    R →+* Localization.AtPrime Q.asIdeal) =
+    (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h').comp
+      (algebraMap R (Localization.AtPrime P.asIdeal)) := by
+  ext x
+  symm
+  apply Localization.localRingHom_to_map P.asIdeal Q.asIdeal
+  exact h'
+
+
+lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
+    (h : ∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d) :
+    ∀ P : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) P = d := by
+sorry

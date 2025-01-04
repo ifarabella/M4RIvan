@@ -20,7 +20,8 @@ lemma foo' : Function.Surjective (Submodule.mkQ N) := by exact Submodule.mkQ_sur
 lemma foo'' (N : Type) [AddCommGroup N] [Module R N] (g : M ≃ₗ[R] N) : Module.Projective R N := by
     sorry
 
-variable (R S M N : Type) [CommRing R] [CommRing S] [AddCommGroup M] [AddCommGroup N] [Module R M]
-    [Module R N] [Module S M] [Module S N] [Algebra R S] (f : M ≃ₗ[R] N)
+variable (R S M : Type) (d : ℕ) [CommRing R] [CommRing S] [AddCommGroup M] [Module R M]
+    [Module S M] [Algebra R S] (N : Submodule R M)
 
-example : M ≃ₗ[S] N := by  sorry
+--example (P : PrimeSpectrum R) (h1 : Module.Projective R (M ⧸ N)) (h2 : Module.rankAtStalk (M ⧸ N) (Submodule.comap (algebraMap R S) P) = d) :
+    --Module.rankAtStalk (S ⊗[R] (M ⧸ N)) P

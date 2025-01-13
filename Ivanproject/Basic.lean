@@ -32,11 +32,146 @@ open Scheme
 open CategoryTheory
 open TensorProduct
 
+
+variable {R : Type} [CommSemiring R] (S : Submonoid R) (P : PrimeSpectrum R)
+variable (M : Type) [AddCommMonoid M] [Module R M]
+
+open TensorProduct
+
+noncomputable def localLinEq : LocalizedModule S M ≃ₗ[R] (Localization S) ⊗[R] M :=
+  (IsLocalizedModule.isBaseChange S _ <| LocalizedModule.mkLinearMap S M).equiv.symm.restrictScalars R
+
+-- pull back prime of S to prime of R
+variable (R S M : Type) [CommRing R] [CommRing S] [Algebra R S]
+    (Q : PrimeSpectrum S) (P : PrimeSpectrum R) [AddCommGroup M] [Module R M]
+    (h' : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal) (d : ℕ)
+
+--map from R_P to S_Q if P := f^{-1}(Q), f : R → S
+instance mylocalmap : Localization.AtPrime P.asIdeal →+*
+    Localization.AtPrime Q.asIdeal :=
+  Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h'
+
+-- map R -> R_P
+example : R →+* Localization.AtPrime P.asIdeal := algebraMap R (Localization.AtPrime P.asIdeal)
+
+-- square R -> S -> S_Q and R -> R_P -> S_Q commutes
+lemma localizedalgebraMapComm : ((algebraMap S (Localization.AtPrime Q.asIdeal)).comp (algebraMap R S) :
+    R →+* Localization.AtPrime Q.asIdeal) =
+    (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h').comp
+      (algebraMap R (Localization.AtPrime P.asIdeal)) := by
+  ext x
+  symm
+  apply Localization.localRingHom_to_map P.asIdeal Q.asIdeal
+  exact h'
+
+instance : Module (Localization.AtPrime P.asIdeal) ((Localization.AtPrime P.asIdeal) ⊗[R] M) := leftModule
+
+--this looks like its just a missing instance, check if this is the case
+/-
+instance : Module (Localization.AtPrime P.asIdeal) (M ⊗[R] (Localization.AtPrime P.asIdeal)) := by
+  sorry
+-/
+/- does this map Mₚ ≃ₗ[Rₚ] (M ⊗[R] Rₚ) exist? or will i need something else?
+instance maybemap : (LocalizedModule P.asIdeal.primeCompl M) ≃ₗ[Localization.AtPrime P.asIdeal] (M ⊗[R] Localization.AtPrime P.asIdeal) := by
+  sorry
+-/
+
+--used to go between finrank and rankAtStalk, so could remove if get rid of rankAtStalk.
+def localLinEqlocal : LocalizedModule P.asIdeal.primeCompl M ≃ₗ[Localization.AtPrime P.asIdeal] Localization P.asIdeal.primeCompl ⊗[R] M := by
+  sorry
+
+--saying that M ⊗[R] Rₚ is locally rank d if rankAtStalk M P = d
+lemma rankalgebraMaprankAtStalk (h : Module.rankAtStalk M P = d) :
+    Module.finrank (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M) = d := by
+  rw [Module.rankAtStalk] at h
+  let g := localLinEq (P.asIdeal.primeCompl) M
+  let g' := localLinEqlocal R M P
+  --g is a R-equiv want an Rₚ-equiv
+  have h1 := LinearEquiv.finrank_eq g'
+  rw [h1] at h
+  rw [← h]
+
+lemma rankalgebraMaprankAtStalksymm (h : Module.finrank (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M) = d) :
+    Module.rankAtStalk M P = d := by
+  rw [Module.rankAtStalk]
+  let g := localLinEq (P.asIdeal.primeCompl) M
+  let g' := localLinEqlocal R M P
+  have h1 := LinearEquiv.finrank_eq g'
+  rw [h1]
+  exact h
+
+lemma rankalgebraMaprankAtStalksymm' : (Module.finrank (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M) = d) → (Module.rankAtStalk M P = d) := by
+  intro h
+  exact rankalgebraMaprankAtStalksymm R M P d h
+--instance : Module (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := by sorry
+
+/-
+example : Module.rankAtStalk (S ⊗[R] M) Q =
+    Module.finrank (Localization.AtPrime Q.asIdeal)
+    (((M ⊗[R] (Localization.AtPrime P.asIdeal)) ⊗[Localization.AtPrime P.asIdeal] (Localization.AtPrime Q.asIdeal))) := by sorry
+-/
+/-
+instance : Module (Localization.AtPrime P.asIdeal) (M ⊗[R] Localization.AtPrime P.asIdeal) := by
+  let h := algebraMap R (Localization.AtPrime P.asIdeal)
+  have : Module R ((M ⊗[R] Localization.AtPrime P.asIdeal)) := instModule
+  sorry
+-/
+
+
+variable [h' : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal)]
+
+instance : Module (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := (mylocalmap R S Q P h'.elim).toModule
+
+--dont need
+instance locinst1 : Module (Localization.AtPrime Q.asIdeal)
+    (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] Localization.AtPrime P.asIdeal ⊗[R] M) := leftModule
+
+#check Module.finrank_baseChange
+
+instance : Algebra (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := ((mylocalmap R S Q P) h'.elim).toAlgebra
+
+open Module Localization
+
+--should just be localizedalgebraMapComm, don't know how to rewrite multiplication to use it.
+instance : IsScalarTower R (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) where
+      smul_assoc x y z := by
+        let h1 := localizedalgebraMapComm R S Q P h'.elim
+        --have h2 : x • y • z = (algebraMap S (Localization.AtPrime Q.asIdeal)).comp (algebraMap R S) • y • z := by sorry
+        sorry
+
+lemma rankalgebraMaprankAtStalkup [Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M)]
+  (h : Module.rankAtStalk M P = d) :
+    Module.rankAtStalk (S ⊗[R] M) Q = d := by
+  let h1 := rankalgebraMaprankAtStalk R M P d h
+  let _ : Module (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := inferInstance
+  let _ : Module (Localization.AtPrime Q.asIdeal)
+    (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] Localization.AtPrime P.asIdeal ⊗[R] M) := leftModule
+  have h2 : Module.finrank (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] (Localization.AtPrime P.asIdeal ⊗[R] M)) = d := by
+    let _ : Algebra (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := inferInstance
+    let h3 := @Module.finrank_baseChange (Localization.AtPrime Q.asIdeal) (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M) _ _ _ _ _ _ _ _
+    rw [h3]
+    exact h1
+  have h3 : Module.finrank (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[R] M) = d := by
+    let h4 : IsScalarTower R (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := by infer_instance
+    have := @AlgebraTensorModule.cancelBaseChange R (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal) M _ _ _ _ _ _ _ _ _ h4 _ _ _ _ _ _
+    rw [← h2]
+    exact (LinearEquiv.finrank_eq this).symm
+  have h4 : Module.finrank (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[S] S ⊗[R] M) = d := by
+    let g := AlgebraTensorModule.cancelBaseChange R S (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal) M
+    let h5 := @LinearEquiv.finrank_eq (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[S] S ⊗[R] M) _ _ _ _ _ _ g
+    rw [h5]
+    exact h3
+  let h5 := rankalgebraMaprankAtStalksymm _ _ _ _ h4
+  rw [h5]
+
+
+--for grassmannian i think V₀ will be Rⁿ⁻¹ or something.
 variable (d : ℕ) (V₀: Type) (R₀ : CommRingCat.{0}) [AddCommGroup V₀] [Module R₀ V₀]  --(x: Under R₀)
     [Module.Projective R₀ V₀]
 
+--add free assumption? or can this come from projective?
 def myFunctorish (R : Under R₀) : Type := {M : Submodule R (R ⊗[R₀] V₀) //
-    Module.Projective R ((R ⊗[R₀] V₀)⧸M) ∧
+    Module.Projective R ((R ⊗[R₀] V₀) ⧸ M) ∧
     (∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d)}
 
 variable {R S : Under R₀} [Algebra R S] [IsScalarTower R₀ R S]
@@ -48,45 +183,6 @@ def myModA (M : Submodule R (R ⊗[R₀] V₀)) :
   Submodule R (S ⊗[R] (R ⊗[R₀] V₀)) :=
   LinearMap.range ((Submodule.subtype M).lTensor S)
 
-/- **Might not need**
-instance basechangequotProj (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :
-  Module.Projective S (S ⊗[R₀] ((R ⊗[R₀] V₀)⧸M)) := by
-  let _ : Module.Projective R₀ (R ⊗[↑R₀] V₀ ⧸ M) := by sorry -- **FALSE!**
-  exact Module.Projective.tensorProduct
--/
-
---def myModB (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V₀) :=
-  --letI := f.right.toAlgebra
-  --haveI : IsScalarTower R₀ R S := .of_algebraMap_eq' f.w
-  --LinearMap.range (((AlgebraTensorModule.cancelBaseChange R₀ R R S V₀).toLinearMap) ∘ₗ ((Submodule.subtype M).lTensor S))
-/-
-
-def myquot1 (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] :=
-    ((S ⊗[R] (R ⊗[R₀] V₀))⧸(LinearMap.range ((Submodule.subtype M).lTensor S)))
-
-instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : AddCommGroup (myquot1 V₀ R₀ M) := by sorry
-
-instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : Module R₀ (myquot1 V₀ R₀ M) := by sorry
-noncomputable def myequiv (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] (f : R → S)
-    [Module R S]
-    [AddCommMonoid (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype))] : --shouldn't need [Module R S] or this
-    (S ⊗[R] ((R ⊗[R₀] V₀)⧸M)) →ₗ[R] (myquot1 V₀ R₀ M)
-    := by sorry
-
-def myequivcancel (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] (f : R → S)
-    [Module R S]
-    [AddCommMonoid (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype))] :
-    ((S ⊗[R] (R ⊗[R₀] V₀))⧸(LinearMap.range ((Submodule.subtype M).lTensor S))) →ₗ[R] ((S ⊗[R₀] V₀)⧸((LinearMap.range ((Submodule.subtype M).lTensor S)))) := by sorry
-
-lemma projBaseChange (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] (f : R → S)
-    [Module R S]
-    [AddCommMonoid (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype))]
-    [HasQuotient (↑S.right ⊗[↑R₀] V₀) (Submodule (↑R.right) (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀))] :
-    Module.Projective (((S ⊗[R₀] V₀)⧸((LinearMap.range ((Submodule.subtype M).lTensor S))))) := by sorry
-
-def myModMap (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V₀) :=
-    --LinearMap.range ((Submodule.subtype M).lTensor S)
--/
 -- let R and S be R_0-algebras and let f: R → S be an R_0-algebra hom
 -- myModMap is a function which eats an R-submod of R ⨂ V_0 and returns an S-submod of S ⊗ V_0
 variable (S) in
@@ -101,6 +197,7 @@ def myModMap' (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V�
   -- and we'll get a map `S ⊗[R] M -> S ⊗[R0] V0`
   -- Now take the image (LinearMap.range)
   LinearMap.range ((AlgebraTensorModule.cancelBaseChange R₀ R S S V₀).toLinearMap ∘ₗ (M.subtype.baseChange (S)))
+
 --def myFunct (d : ℕ) : CommRingCat ⥤ Type _ where
   --obj R := {M : Submodule R ((Fin n) → R) // Module.Projective R ((Fin n → R)⧸M) ∧ (∀ P : PrimeSpectrum R, Module.rankAtStalk ((Fin n → R)⧸M) P = d) }
   --map {R S} f M := ⟨(M.subtype.lTensor S).range, _ ⟩ --LinearMap.lTensor
@@ -120,33 +217,9 @@ lemma mapexact (M : Submodule R (R ⊗[R₀] V₀)) :
   have foo : Function.Exact (Submodule.subtype M) (Submodule.mkQ M) := LinearMap.exact_subtype_mkQ M
   have foo' : Function.Surjective (Submodule.mkQ M) := Submodule.mkQ_surjective M
   exact lTensor_exact S foo foo'
-    --LinearMap.lTensor_exact' (↑R.right) (↑S.right) (↥M) (↑R.right ⊗[↑R₀] V₀) (↑R.right ⊗[↑R₀] V₀ ⧸ M)
-      --M.subtype M.mkQ foo
 
--- instance :
---     Module R (S ⊗[R] (R ⊗[R₀] V₀)) :=
---     instModule
-
--- instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : Module R (LinearMap.range ((Submodule.subtype M).lTensor S)) :=
---   (LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype)).module'
-
--- instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : ((LinearMap.range ((Submodule.subtype M).lTensor S)) : Submodule R (S ⊗[R] (R ⊗[R₀] V₀))) := by sorry
-
--- instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] :
---     AddCommMonoid (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype)) := by sorry
-
--- instance (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] :
---     Module (↑R.right) (↑S.right ⊗[↑R.right] ↑R.right ⊗[↑R₀] V₀ ⧸ LinearMap.range (LinearMap.lTensor (↑S.right) M.subtype)) := by sorry
-/-
-lemma equiv1 (M : Submodule R (R ⊗[R₀] V₀)) [Module R S] : ((S ⊗[R] (R ⊗[R₀] V₀)) ⧸ (LinearMap.range ((Submodule.subtype M).lTensor S)))
-    ≃ₗ[R] (S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M)) :=
-  Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M)
--/
 lemma projlem {R M N : Type} [CommRing R] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
     [Module.Projective R M] (f : M ≃ₗ[R] N) : Module.Projective R N := by
-  --apply Module.Projective.of_lifting_property''
-  --intro g1 g2
-  --have h : Module.Projective R M := inferInstance
   exact Module.Projective.of_equiv f
 
 omit [Module.Projective (↑R₀) V₀] in
@@ -160,15 +233,8 @@ omit [Module.Projective (↑R₀) V₀] in
 lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :
     Module.Projective S ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) := by
   refine Module.Projective.of_equiv  (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
-  --refine projlem (?_ : S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) ≃ₗ[S] (S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M))
-  /-
-  mapexact (V₀ : Type) (R₀ : CommRingCat) [AddCommGroup V₀] [Module (↑R₀) V₀] [Module.Projective (↑R₀) V₀]
-  {R S : Under R₀} (M : Submodule (↑R.right) (↑R.right ⊗[↑R₀] V₀)) [Module ↑R.right ↑S.right] :
-  -/
   have h1 := (mapexact V₀ R₀ S M)
   let foo := (Function.Exact.linearEquivOfSurjective (M := S ⊗[R] ↥M) (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M)).symm
-  -- want: S-module iso, have foo: R-module iso :-( **now its an S-module iso yay**
-  -- `foo` not strong enough :-(
   refine foo ≪≫ₗ ?_
   let foo' := Submodule.Quotient.equiv
     (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype))
@@ -176,64 +242,35 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
     (AlgebraTensorModule.cancelBaseChange R₀ R S S V₀)
     (mymodeq V₀ R₀ M)
   exact foo'
-  --refine ?_ ∘ₗ foo.symm
-  --refine ?_ ∘ₗ (Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M))
 
---  refine projlem ((LinearEquiv.symm
---    ((Submodule.Quotient.equiv ?_ ?_ ?_ ?_) ∘ₗ (Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M)))))
-  --need to insert a map from '(S ⊗[R] (R ⊗[R0] V0)) ⧸ myModmap'' to (S ⊗[R₀] V₀) ⧸ M
---projlem (basechangequotProj V₀ R₀ M) (LinearEquiv.symm ((Function.Exact.linearEquivOfSurjective (mapexact V₀ R₀ M) (mapsurj V₀ R₀ M))))
+--I think I need to put this 'Free' instance into my functor
+instance freelem (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (h : Module.Projective R ((R ⊗[R₀] V₀) ⧸ M)) :
+    Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by sorry
 
--- pull back prime of S to prime of R
-variable (R S : Type) [CommRing R] [CommRing S] [Algebra R S]
-    (Q : PrimeSpectrum S) (P : PrimeSpectrum R)
-    -- P = f^{-1}(Q) where f : R → S is `algebraMap R S`
-    -- exact? found the way to pull back Q to Spec(R)
---    (h : P = (algebraMap R S).specComap Q)
-    (h' : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal)
+--an S_Q equiv used in proof of myModConstRank for functorality
+def myModLinEq (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (Q : PrimeSpectrum S)
+    (hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal ) :
+    (Localization.AtPrime Q.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) ≃ₗ[Localization.AtPrime Q.asIdeal] ((Localization.AtPrime Q.asIdeal ⊗[↑S.right] (↑S.right ⊗[↑R₀] V₀ ⧸ myModMap' V₀ R₀ S M))) := by sorry
 
-noncomputable example : Localization.AtPrime P.asIdeal →+*
-    Localization.AtPrime Q.asIdeal :=
-  -- `exact?` found the map from R_P to S_Q if P := f^{-1}(Q), f : R → S
-  Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h'
-
--- R_P is automatically an R-algebra
-#synth Algebra R (Localization.AtPrime P.asIdeal)
-
-#synth Algebra R (Localization.AtPrime Q.asIdeal) -- in fact S_Q is an R-algebra already!
-
-
-
--- is this right? Not entirely sure. It *works* but there's no API for it.
-example : R →+* Localization.AtPrime P.asIdeal := OreLocalization.numeratorRingHom
--- Question: is there a better name for R -> R_P when R is commutative?
--- Answer yes: R_P is known by typeclass inference to be an R-algebra automatically
--- so it's actually called
-example : R →+* Localization.AtPrime P.asIdeal := algebraMap R (Localization.AtPrime P.asIdeal)
-
-#check Localization.localRingHom_to_map P.asIdeal Q.asIdeal (algebraMap R S) h'
-/-
-∀ (x : R),
-  (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) ⋯)
-      ((algebraMap R (Localization.AtPrime P.asIdeal)) x) =
-    (algebraMap S (Localization.AtPrime Q.asIdeal)) ((algebraMap R S) x)
-
-i.e. the map R -> R_P and then the map R_P -> S_Q equals the map R -> S and then the map S -> S_Q
-all evaluated at x
-
--/
--- square R -> S -> S_Q and R -> R_P -> S_Q commutes
-example : ((algebraMap S (Localization.AtPrime Q.asIdeal)).comp (algebraMap R S) :
-    R →+* Localization.AtPrime Q.asIdeal) =
-    (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) <| h').comp
-      (algebraMap R (Localization.AtPrime P.asIdeal)) := by
-  ext x
-  symm
-  apply Localization.localRingHom_to_map P.asIdeal Q.asIdeal
-  exact h'
-
-
+omit [Module.Projective (R₀) V₀] in
 lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
     (h : ∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d) :
-    ∀ P : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) P = d := by
-sorry
+    ∀ Q : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) Q = d := by
+intro Q
+let P := RingHom.specComap (algebraMap R S) Q
+have hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal := rfl
+let _ : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal) := { out := hP }
+have h1 : Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by exact freelem _ _ M P
+let h2 := rankalgebraMaprankAtStalkup R S ((R ⊗[R₀] V₀) ⧸ M) Q P d
+specialize h P
+apply h2 at h
+let h3 := rankalgebraMaprankAtStalk _ _ _ _ h
+let g := AlgebraTensorModule.cancelBaseChange R S (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal) ((R ⊗[R₀] V₀) ⧸ M)
+let h4 := @LinearEquiv.finrank_eq (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[↑S.right]
+    ↑S.right ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) _ _ _ _ _ _ g
+rw [h3] at h4
+apply rankalgebraMaprankAtStalksymm'
+let g' := myModLinEq V₀ R₀ M P Q hP
+let h5 := LinearEquiv.finrank_eq g'
+rw [← h5]
+exact id (Eq.symm h4)

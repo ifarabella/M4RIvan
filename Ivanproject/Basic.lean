@@ -260,7 +260,7 @@ intro Q
 let P := RingHom.specComap (algebraMap R S) Q
 have hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal := rfl
 let _ : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal) := { out := hP }
-have h1 : Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by exact freelem _ _ M P
+have h1 : Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by exact freelem _ _ M P inferInstance
 let h2 := rankalgebraMaprankAtStalkup R S ((R ⊗[R₀] V₀) ⧸ M) Q P d
 specialize h P
 apply h2 at h

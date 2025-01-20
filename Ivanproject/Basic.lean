@@ -130,8 +130,6 @@ instance : Module (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIde
 instance locinst1 : Module (Localization.AtPrime Q.asIdeal)
     (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] Localization.AtPrime P.asIdeal ⊗[R] M) := leftModule
 
-#check Module.finrank_baseChange
-
 instance : Algebra (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) h'.elim).toAlgebra
 
 open Module Localization
@@ -263,18 +261,48 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
 instance freelem (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (h : Module.Projective R ((R ⊗[R₀] V₀) ⧸ M)) :
     Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by sorry
 
-def modlineq (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀) ⧸ M)] :
+def quotequal (M : Submodule R (R ⊗[R₀] V₀)) : Submodule.map (↑(AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀))
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) =
+  Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) := rfl
+
+def modlineq (M : Submodule R (R ⊗[R₀] V₀)) :
     ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) ≃ₗ[S] S ⊗[R] ((R ⊗[R₀] V₀) ⧸ M) := by
   rw [← mymodeq]
-  
-  sorry
+  let g := TensorProduct.tensorQuotientEquiv S M
+  --let g' := AlgebraTensorModule.cancelBaseChange R₀ R S S V₀
+  let f := (Function.Exact.linearEquivOfSurjective (M := S ⊗[R] ↥M) (mapexact V₀ R₀ S M) (mapsurj V₀ R₀ S M))
+  refine ?_ ≪≫ₗ f
+  let h :=
+        ((AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right)
+                V₀).ofSubmodules
+            (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype))
+            (Submodule.map
+              (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+              (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)))
+          (quotequal _ _ M)).symm
+  have h1 : Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) =
+  Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+    (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) := by exact rfl
+  exact
+    (Submodule.Quotient.equiv (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype))
+        (Submodule.map
+          (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+          (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)))
+        (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀) h1).symm
 
 --an S_Q equiv used in proof of myModConstRank for functorality
-def myModLinEq (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (Q : PrimeSpectrum S)
-    (hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal ) :
+def myModLinEq (M : Submodule R (R ⊗[R₀] V₀)) (Q : PrimeSpectrum S) :
     (Localization.AtPrime Q.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) ≃ₗ[Localization.AtPrime Q.asIdeal] ((Localization.AtPrime Q.asIdeal ⊗[↑S.right] (↑S.right ⊗[↑R₀] V₀ ⧸ myModMap' V₀ R₀ S M))) := by
-
-  sorry
+  let f := LinearEquiv.baseChange (↑S.right) (Localization.AtPrime Q.asIdeal)
+      (↑S.right ⊗[↑R₀] V₀ ⧸ myModMap' V₀ R₀ S M) (↑S.right ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M))
+      (@modlineq V₀ R₀ _ _ R S _ _ M)
+  --let g := AlgebraTensorModule.cancelBaseChange (Localization.AtPrime Q.asIdeal)
+  let g := AlgebraTensorModule.cancelBaseChange (↑R.right) (↑S.right) (Localization.AtPrime Q.asIdeal)
+      (Localization.AtPrime Q.asIdeal) (↑R.right ⊗[↑R₀] V₀ ⧸ M)
+  refine g.symm ≪≫ₗ ?_
+  exact id f.symm
 
 omit [Module.Projective (R₀) V₀] [Module.Finite (↑R₀) V₀] in
 lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
@@ -294,7 +322,7 @@ let h4 := @LinearEquiv.finrank_eq (Localization.AtPrime Q.asIdeal) (Localization
     ↑S.right ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) _ _ _ _ _ _ g
 rw [h3] at h4
 apply rankalgebraMaprankAtStalksymm'
-let g' := myModLinEq V₀ R₀ M P Q hP
+let g' := myModLinEq V₀ R₀ M Q
 let h5 := LinearEquiv.finrank_eq g'
 rw [← h5]
 exact id (Eq.symm h4)

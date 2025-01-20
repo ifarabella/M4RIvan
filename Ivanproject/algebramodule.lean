@@ -74,3 +74,4 @@ example (f : M →ₗ[R] N) [Module (Localization S) M] [Module (Localization S)
     IsLinearMap (Localization S) f where
       map_add :=  LinearMap.map_add f
       map_smul c x := localsmul S M N f c x
+

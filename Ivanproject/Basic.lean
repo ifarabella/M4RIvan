@@ -34,6 +34,13 @@ open Scheme
 open CategoryTheory
 open TensorProduct
 
+
+lemma free_of_finite_IsLocalRing (R : Type*) [CommRing R] [IsLocalRing R] (M : Type*) [AddCommGroup M] [Module R M]
+  (h : Module.Projective R M) [Module.Finite R M] : Module.Free R M := by
+  let h := Module.finitePresentation_of_projective R M
+  exact Module.free_of_flat_of_isLocalRing
+
+
 noncomputable section
 variable {R : Type} [CommSemiring R] (S : Submonoid R) (P : PrimeSpectrum R)
 variable (M : Type) [AddCommMonoid M] [Module R M]
@@ -257,9 +264,12 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
   refine foo ≪≫ₗ ?_
   exact mymodMapequiv V₀ R₀ M
 
---just sorry, this is standard but not in mathlib.
+--can be done thanks to thread
 instance freelem (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (h : Module.Projective R ((R ⊗[R₀] V₀) ⧸ M)) :
-    Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by sorry
+    Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] (R ⊗[R₀] V₀ ⧸ M)) := by
+  have h' : Module.Projective (Localization.AtPrime P.asIdeal)
+    (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := Module.Projective.tensorProduct
+  exact free_of_finite_IsLocalRing (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] (R ⊗[R₀] V₀ ⧸ M)) h'
 
 def quotequal (M : Submodule R (R ⊗[R₀] V₀)) : Submodule.map (↑(AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀))
     (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype)) =

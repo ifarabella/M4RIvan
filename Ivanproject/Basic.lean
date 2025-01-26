@@ -314,7 +314,7 @@ def myModLinEq (M : Submodule R (R ⊗[R₀] V₀)) (Q : PrimeSpectrum S) :
   refine g.symm ≪≫ₗ ?_
   exact id f.symm
 
-omit [Module.Projective (R₀) V₀] [Module.Finite (↑R₀) V₀] in
+omit [Module.Projective R₀ V₀] in
 lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
     (h : ∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d) :
     ∀ Q : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) Q = d := by

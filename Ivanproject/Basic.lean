@@ -128,7 +128,6 @@ instance : Module (Localization.AtPrime P.asIdeal) (M ⊗[R] Localization.AtPrim
   sorry
 -/
 
-
 variable [h' : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal)]
 
 instance : Module (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := (Localization.localRingHom P.asIdeal Q.asIdeal (algebraMap R S) h'.elim).toModule
@@ -157,7 +156,6 @@ lemma rankalgebraMaprankAtStalkup [Module.Free (Localization.AtPrime P.asIdeal) 
   let _ : Module (Localization.AtPrime Q.asIdeal)
     (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] Localization.AtPrime P.asIdeal ⊗[R] M) := leftModule
   have h2 : Module.finrank (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[Localization.AtPrime P.asIdeal] (Localization.AtPrime P.asIdeal ⊗[R] M)) = d := by
-    let _ : Algebra (Localization.AtPrime P.asIdeal) (Localization.AtPrime Q.asIdeal) := inferInstance
     let h3 := @Module.finrank_baseChange (Localization.AtPrime Q.asIdeal) (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] M) _ _ _ _ _ _ _ _
     rw [h3]
     exact h
@@ -264,7 +262,6 @@ lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R �
   refine foo ≪≫ₗ ?_
   exact mymodMapequiv V₀ R₀ M
 
---can be done thanks to thread
 instance freelem (M : Submodule R (R ⊗[R₀] V₀)) (P : PrimeSpectrum R) (h : Module.Projective R ((R ⊗[R₀] V₀) ⧸ M)) :
     Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[R] (R ⊗[R₀] V₀ ⧸ M)) := by
   have h' : Module.Projective (Localization.AtPrime P.asIdeal)
@@ -318,21 +315,21 @@ omit [Module.Projective R₀ V₀] in
 lemma myModConstRank (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)]
     (h : ∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d) :
     ∀ Q : PrimeSpectrum S, Module.rankAtStalk ((S ⊗[R₀] V₀) ⧸ (myModMap' V₀ R₀ S M)) Q = d := by
-intro Q
-let P := RingHom.specComap (algebraMap R S) Q
-have hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal := rfl
-let _ : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal) := { out := hP }
-have h1 : Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by exact freelem _ _ M P inferInstance
-let h2 := rankalgebraMaprankAtStalkup R S ((R ⊗[R₀] V₀) ⧸ M) Q P d
-specialize h P
-apply h2 at h
-let h3 := rankalgebraMaprankAtStalk _ _ _ _ h
-let g := AlgebraTensorModule.cancelBaseChange R S (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal) ((R ⊗[R₀] V₀) ⧸ M)
-let h4 := @LinearEquiv.finrank_eq (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[↑S.right]
+  intro Q
+  let P := RingHom.specComap (algebraMap R S) Q
+  have hP : P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal := rfl
+  let _ : Fact (P.asIdeal = Ideal.comap (algebraMap R S) Q.asIdeal) := { out := hP }
+  have h1 : Module.Free (Localization.AtPrime P.asIdeal) (Localization.AtPrime P.asIdeal ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) := by exact freelem _ _ M P inferInstance
+  let h2 := rankalgebraMaprankAtStalkup R S ((R ⊗[R₀] V₀) ⧸ M) Q P d
+  specialize h P
+  apply h2 at h
+  let h3 := rankalgebraMaprankAtStalk _ _ _ _ h
+  let g := AlgebraTensorModule.cancelBaseChange R S (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal) ((R ⊗[R₀] V₀) ⧸ M)
+  let h4 := @LinearEquiv.finrank_eq (Localization.AtPrime Q.asIdeal) (Localization.AtPrime Q.asIdeal ⊗[↑S.right]
     ↑S.right ⊗[↑R.right] (↑R.right ⊗[↑R₀] V₀ ⧸ M)) _ _ _ _ _ _ g
-rw [h3] at h4
-apply rankalgebraMaprankAtStalksymm'
-let g' := myModLinEq V₀ R₀ M Q
-let h5 := LinearEquiv.finrank_eq g'
-rw [← h5]
-exact id (Eq.symm h4)
+  rw [h3] at h4
+  apply rankalgebraMaprankAtStalksymm'
+  let g' := myModLinEq V₀ R₀ M Q
+  let h5 := LinearEquiv.finrank_eq g'
+  rw [← h5]
+  exact id (Eq.symm h4)

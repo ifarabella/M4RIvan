@@ -73,6 +73,7 @@ def F : Under R ⥤ Type where
       AlgebraTensorModule.cancelBaseChange_symm_tmul, LinearMap.baseChange_tmul,
       AlgEquiv.toLinearMap_apply, Algebra.TensorProduct.rid_tmul, bar, types_comp_apply]
 
+@[simps]
 def F' : Under R ⥤ Type where
   obj A := M →ₗ[R] A
   map {A _} f (φ : M →ₗ[R] A) := (LinearMap.comp (CommRingCat.toAlgHom f).toLinearMap φ)
@@ -87,9 +88,11 @@ variable (R : CommRingCat.{0})
 variable (M : Type) [AddCommGroup M] [Module R M] (ι : Type) [Finite ι] (b : Basis ι R M)
   (B : Under R)
 
+@[simps!]
 def foo1 : (ι → B) ≃ (M →ₗ[R] B) := by
  exact ((Basis.constr b R) : (ι → B) ≃ₗ[R] M →ₗ[R] B).toEquiv
 
+@[simps]
 def foo2 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (ι → B) where
   toFun f i := f (MvPolynomial.X i)
   invFun g := MvPolynomial.aeval g
@@ -103,10 +106,11 @@ def foo2 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (ι → B) where
     simp
 
 
+@[simps!]
 def foo3 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (M →ₗ[R] B) := by
   exact Equiv.trans (foo2 R ι B) (foo1 R M ι b B)
 
-def foo4 (A : Under R) (B : Type) [CommRing B] [Algebra R B] : (R.mkUnder B ⟶ A) ≃ (B →ₐ[R] A.right) where
+abbrev foo4 (A : Under R) (B : Type) [CommRing B] [Algebra R B] : (R.mkUnder B ⟶ A) ≃ (B →ₐ[R] A.right) where
   toFun f :=
     { __ :=CommRingCat.toAlgHom f, commutes' := by
         simp only [AlgHom.toRingHom_eq_coe, RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe,
@@ -141,7 +145,8 @@ def corepresentableOfBasis (ι : Type) [Finite ι] (b : Basis ι R M) :
   Functor.CorepresentableBy (F' R M) <| CommRingCat.mkUnder R (MvPolynomial ι R) where
     homEquiv {A} := Equiv.trans (by exact foo4 R A (MvPolynomial ι ↑R)) (foo3 R M ι b A)
     homEquiv_comp {A B} f α := by
-      simp only [Equiv.trans_apply]
-      rw [foo3, foo1]
-      sorry
+      apply b.ext
+      intro i
+      simp
+
 end section

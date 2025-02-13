@@ -181,7 +181,7 @@ variable (d : ℕ) (V₀: Type) (R₀ : CommRingCat.{0}) [AddCommGroup V₀] [Mo
 
 /--A Type denoting R-submodules of (R ⊗[R₀] V₀) such that (R ⊗[R₀] V₀) ⧸ M is projective and locally
 free of rank d. -/
-def myFunctorish (R : Under R₀) : Type := {M : Submodule R (R ⊗[R₀] V₀) //
+abbrev myFunctorish (R : Under R₀) : Type := {M : Submodule R (R ⊗[R₀] V₀) //
     Module.Projective R ((R ⊗[R₀] V₀) ⧸ M) ∧
     (∀ P : PrimeSpectrum R, Module.rankAtStalk ((R ⊗[R₀] V₀)⧸M) P = d)}
 

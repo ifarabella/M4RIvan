@@ -107,12 +107,23 @@ def foo3 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (M →ₗ[R] B) := by
   exact Equiv.trans (foo2 R ι B) (foo1 R M ι b B)
 
 def foo4 (A : Under R) (B : Type) [CommRing B] [Algebra R B] : (R.mkUnder B ⟶ A) ≃ (B →ₐ[R] A.right) where
-  toFun f := by
-    convert CommRingCat.toAlgHom f
-    sorry
-  invFun := _
-  left_inv := _
-  right_inv := _
+  toFun f :=
+    { __ :=CommRingCat.toAlgHom f, commutes' := by
+        simp only [AlgHom.toRingHom_eq_coe, RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe,
+          MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe]
+        intro r
+        exact AlgHom.commutes (CommRingCat.toAlgHom f) r
+        }
+  invFun g := AlgHom.toUnder g
+  left_inv f := by
+    ext x
+    simp
+    rfl
+  right_inv g := by
+    ext x
+    simp
+    rfl
+
 /-
 example : ((MvPolynomial ι R) →ₗ[R] B) ≃ (ι → B) where
   toFun f := by
@@ -128,5 +139,9 @@ example : ((MvPolynomial ι R) →ₗ[R] B) ≃ (ι → B) where
 -- assume M has a finite basis
 def corepresentableOfBasis (ι : Type) [Finite ι] (b : Basis ι R M) :
   Functor.CorepresentableBy (F' R M) <| CommRingCat.mkUnder R (MvPolynomial ι R) where
-    homEquiv {A} := Equiv.trans (by exact?) (foo3 R M ι b A)
-    homEquiv_comp {A B} f α := sorry
+    homEquiv {A} := Equiv.trans (by exact foo4 R A (MvPolynomial ι ↑R)) (foo3 R M ι b A)
+    homEquiv_comp {A B} f α := by
+      simp only [Equiv.trans_apply]
+      rw [foo3, foo1]
+      sorry
+end section

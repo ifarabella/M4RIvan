@@ -20,14 +20,24 @@ noncomputable def typemap (R S : Under R₀) [Algebra R S] [IsScalarTower R₀ R
   let h2 := @myModConstRank d V₀ R₀ _ _ _ R S _ _ M.val _ M.property.right
   use myModMap' V₀ R₀ S (M : Submodule (↑R.right) (↑R.right ⊗[↑R₀] V₀))
 
+def myModMapId (R : Under R₀) (M : Submodule R (R ⊗[R₀] V₀)) : myModMap' V₀ R₀ R M = M := by
+  rw [← mymodeq V₀ R₀ M]
+  
+  sorry
 
 noncomputable def Grass : Under R₀ ⥤ Type where
   obj R := myFunctorish d V₀ R₀ R
-  map {R S} f (M : myFunctorish d V₀ R₀ R) :=
+  map {R S} f (M : myFunctorish d V₀ R₀ R) := by --again, how to avoid using tactic mode?
     letI : Algebra R S := RingHom.toAlgebra (CommRingCat.toAlgHom f)
     haveI : IsScalarTower R₀ R S := SMul.comp.isScalarTower id
-    (((typemap d V₀ R₀ R S) M ) : myFunctorish d V₀ R₀ S)
+    exact (((typemap d V₀ R₀ R S) M ) : myFunctorish d V₀ R₀ S)
+  map_id R:= by
+    simp only [CommRingCat.toAlgHom_id, AlgHom.id_toRingHom]
+    ext M
+    simp only [types_id_apply]
+    rw [typemap]
+    simp only [id_eq]
+    let h := myModMapId V₀ R₀ R M.val
 
     sorry
-  map_id := sorry
   map_comp := sorry

@@ -28,13 +28,21 @@ lemma typemap_val (R S : Under R₀) [Algebra R S] [IsScalarTower R₀ R S]
 -- if `a ∈ A ⊗[A] N` and `b` is the image of `a` under the obvious map `A ⊗[A] N = N`
 -- then `a = 1 ⊗ b`
 theorem foo38 (A : Type) [CommRing A] (N : Type) [AddCommGroup N] [Module A N] (an : A ⊗[A] N) :
-  1 ⊗ₜ (TensorProduct.lid A N an) = an := by sorry
+  1 ⊗ₜ (TensorProduct.lid A N an) = an := by
+  let g := @lid_symm_apply A _ _ _ _ (TensorProduct.lid A N an)
+  simp only [LinearEquiv.symm_apply_apply] at g
+  exact id (Eq.symm g)
 
--- missing?
 --  cancelBaseChange : R ⊗[R] R ⊗[R₀] N ≃ₗ[R] R ⊗[R₀] N sends 1 ⊗ x to x
 lemma foo37 (R : Under R₀) (N : Type) [AddCommGroup N] [Module R₀ N] (x : R ⊗[R₀] N) :
     (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑R.right) (↑R.right) N) (1 ⊗ₜ[↑R.right] x) = x := by
-  sorry
+  let g := AlgebraTensorModule.cancelBaseChange_symm_tmul R₀ R R (1 : R) x
+  dsimp only [AlgebraTensorModule.cancelBaseChange_symm_tmul] at g
+  induction x
+  · simp
+  · simp
+  · simp_all [tmul_add]
+
 
 
 def myModMapId (R : Under R₀) (M : Submodule R (R ⊗[R₀] V₀)) : myModMap' V₀ R₀ R M = M := by
@@ -68,4 +76,11 @@ noncomputable def Grass : Under R₀ ⥤ Type where
     simp only [id_eq]
     let h := myModMapId V₀ R₀ R M.val
     simp [h]
-  map_comp := sorry
+  map_comp := by
+    intro X Y Z f g
+    --ext y z
+    simp only [CommRingCat.toAlgHom_comp, typemap_val, types_comp_apply]
+    unfold typemap
+    --have h :
+    sorry
+    --have h : typemap d V₀ R₀ X Z M = (typemap d V₀ R₀ X Y M typemap d V₀ R₀ Y Z M

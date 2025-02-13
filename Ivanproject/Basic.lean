@@ -210,6 +210,7 @@ def myModMap' (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V�
   -- and we'll get a map `S ⊗[R] M -> S ⊗[R0] V0`
   -- Now take the image (LinearMap.range)
   LinearMap.range ((AlgebraTensorModule.cancelBaseChange R₀ R S S V₀).toLinearMap ∘ₗ (M.subtype.baseChange (S)))
+  --M.map ((IsScalarTower.toAlgHom R₀ R S).toLinearMap.rTensor V₀)
 
 --def myFunct (d : ℕ) : CommRingCat ⥤ Type _ where
   --obj R := {M : Submodule R ((Fin n) → R) // Module.Projective R ((Fin n → R)⧸M) ∧ (∀ P : PrimeSpectrum R, Module.rankAtStalk ((Fin n → R)⧸M) P = d) }

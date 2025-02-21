@@ -150,3 +150,9 @@ def corepresentableOfBasis (ι : Type) [Finite ι] (b : Basis ι R M) :
       simp
 
 end section
+
+variable (R : CommRingCat.{0})
+
+variable (M : Type) [AddCommGroup M] [Module R M] [Module.FinitePresentation R M]
+
+--def corepresentableOfFP : Functor.CorepresentableBy (F' R M)

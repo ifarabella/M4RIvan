@@ -268,17 +268,28 @@ lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra
     refine ⟨?_, ⟨⟨?_, ?_⟩, ?_⟩⟩
     · use ((AlgebraTensorModule.cancelBaseChange (↑R₀) (↑S.right) (↑T.right) (↑T.right) V₀).symm tv)
     · let tim := (LinearMap.baseChange T (myModMap V₀ R₀ S M)) (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
-      rw [mymodeq]
+      rw [mymodeq, myModMap']
       sorry
     · rw [← h2]
       sorry
     · simp only [LinearEquiv.apply_symm_apply]
   · intro ⟨x, y⟩
-    simp only [Submodule.mem_map, LinearMap.mem_range, exists_exists_eq_and]
+    --simp only [Submodule.mem_map, LinearMap.mem_range, exists_exists_eq_and]
     refine ⟨?_, ?_ ⟩
-    · sorry
-
-    sorry
+    cases' y with y1 y2
+    have hx : x ∈
+      (LinearMap.range
+        (LinearMap.baseChange (↑T.right)
+          (Submodule.map (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑R.right) (↑S.right) (↑S.right) V₀)
+              (LinearMap.range (LinearMap.baseChange (↑S.right) M.subtype))).subtype)) := y1
+    rw [LinearMap.mem_range] at hx
+    · rw [mymodeq] at hx
+      use (AlgebraTensorModule.cancelBaseChange R₀ R T T V₀).symm tv
+    · simp only [SetLike.mem_coe, LinearMap.mem_range]
+      constructor
+      · 
+        sorry
+      · sorry
 
 omit [Module.Projective (↑R₀) V₀] [Module.Finite (↑R₀) V₀] in
 lemma myModProj1 (M : Submodule R (R ⊗[R₀] V₀)) [Module.Projective R ((R ⊗[R₀] V₀)⧸M)] :

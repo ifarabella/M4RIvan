@@ -260,22 +260,24 @@ lemma map_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra 
     [IsScalarTower R₀ R T] : (myModMap V₀ R₀ T M) = myModMap V₀ R₀ T (LinearMap.range (myModMap V₀ R₀ S M)) := by sorry
 -/
 lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
-    [IsScalarTower R₀ R T] : myModMap' V₀ R₀ T M = myModMap' V₀ R₀ T (myModMap' V₀ R₀ S M) := by
+    [IsScalarTower R₀ R T] [IsScalarTower R S T] : myModMap' V₀ R₀ T M = myModMap' V₀ R₀ T (myModMap' V₀ R₀ S M) := by
   rw [← mymodeq, ← mymodeq, ← mymodeq]
   ext tv
   constructor
   · intro ⟨trv, ⟨⟨tm, h12⟩, h2⟩⟩
     refine ⟨?_, ⟨⟨?_, ?_⟩, ?_⟩⟩
     · use ((AlgebraTensorModule.cancelBaseChange (↑R₀) (↑S.right) (↑T.right) (↑T.right) V₀).symm tv)
-    · sorry
-    · rw [mymodeq]
+    · let tim := (LinearMap.baseChange T (myModMap V₀ R₀ S M)) (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
+      rw [mymodeq]
+      sorry
+    · rw [← h2]
       sorry
     · simp only [LinearEquiv.apply_symm_apply]
   · intro ⟨x, y⟩
     simp only [Submodule.mem_map, LinearMap.mem_range, exists_exists_eq_and]
     refine ⟨?_, ?_ ⟩
     · sorry
-    
+
     sorry
 
 omit [Module.Projective (↑R₀) V₀] [Module.Finite (↑R₀) V₀] in

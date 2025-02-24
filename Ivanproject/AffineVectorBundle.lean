@@ -88,10 +88,6 @@ variable (R : CommRingCat.{0})
 variable (M : Type) [AddCommGroup M] [Module R M] (ι : Type) [Finite ι] (b : Basis ι R M)
   (B : Under R)
 
-@[simps!]
-def foo1 : (ι → B) ≃ (M →ₗ[R] B) := by
- exact ((Basis.constr b R) : (ι → B) ≃ₗ[R] M →ₗ[R] B).toEquiv
-
 @[simps]
 def foo2 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (ι → B) where
   toFun f i := f (MvPolynomial.X i)
@@ -104,11 +100,6 @@ def foo2 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (ι → B) where
     intro f
     ext
     simp
-
-
-@[simps!]
-def foo3 : ((MvPolynomial ι R) →ₐ[R] B) ≃ (M →ₗ[R] B) := by
-  exact Equiv.trans (foo2 R ι B) (foo1 R M ι b B)
 
 abbrev foo4 (A : Under R) (B : Type) [CommRing B] [Algebra R B] : (R.mkUnder B ⟶ A) ≃ (B →ₐ[R] A.right) where
   toFun f :=
@@ -128,23 +119,11 @@ abbrev foo4 (A : Under R) (B : Type) [CommRing B] [Algebra R B] : (R.mkUnder B �
     simp
     rfl
 
-/-
-example : ((MvPolynomial ι R) →ₗ[R] B) ≃ (ι → B) where
-  toFun f := by
-    intro i
-    exact f (MvPolynomial.X i)
-  invFun g := by
-    let b' := MvPolynomial.basisMonomials ι R
-
-    sorry
-  left_inv := _
-  right_inv := _
--/
 -- assume M has a finite basis
 def corepresentableOfBasis (ι : Type) [Finite ι] (b : Basis ι R M) :
   Functor.CorepresentableBy (F' R M) <| CommRingCat.mkUnder R (MvPolynomial ι R) where
-    homEquiv {A} := Equiv.trans (by exact foo4 R A (MvPolynomial ι ↑R)) (foo3 R M ι b A)
-    homEquiv_comp {A B} f α := by
+    homEquiv {A} := Equiv.trans (foo4 R A (MvPolynomial ι ↑R)) ((Equiv.trans (foo2 R ι A) (((Basis.constr b R) : (ι → A) ≃ₗ[R] M →ₗ[R] A).toEquiv)))
+    homEquiv_comp {A B} f _ := by
       apply b.ext
       intro i
       simp
@@ -154,5 +133,40 @@ end section
 variable (R : CommRingCat.{0})
 
 variable (M : Type) [AddCommGroup M] [Module R M] [Module.FinitePresentation R M]
+--!!
+--THE FOLLOWING ARE 'BAD' VARIABLES: WANT TO GET THEM FROM Module.FinitePresentation.equiv_quotient
+--!!
+variable (L ι β : Type) (_ : AddCommGroup L) (_ : Module R L) (K : Submodule R L) (_ : M ≃ₗ[R] L ⧸ K)
+      (_ : Finite ι) (_ : Finite β) (lb : Basis β R L ) (kb : Basis ι R K)
+      (φ : (MvPolynomial ι R) →ₗ[R] (MvPolynomial β R))
 
---def corepresentableOfFP : Functor.CorepresentableBy (F' R M)
+def ignorevar (B : Under R)  : (MvPolynomial ι R) →ₐ[R] B where
+  toFun := MvPolynomial.aeval (fun _ => 0)
+  map_one' := map_one (MvPolynomial.aeval fun _ ↦ 0)
+  map_mul' := fun x y ↦ map_mul (MvPolynomial.aeval fun _ ↦ 0) x y
+  map_zero' := rfl
+  map_add' := fun x y ↦ map_add (MvPolynomial.aeval fun _ ↦ 0) x y
+  commutes' := fun r ↦ AlgHom.commutes (MvPolynomial.aeval fun _ ↦ 0) r
+
+abbrev representor := ((MvPolynomial β R) ⧸ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))
+
+abbrev foo5 (B : Under R) : (M →ₗ[R] B) ≃ {α : ((MvPolynomial β R) → B) // α ∘ φ = (ignorevar R ι B)} where
+  toFun := sorry
+  invFun := sorry
+  left_inv := sorry
+  right_inv := sorry
+
+abbrev subtype_equiv_rep (B : Under R) : ((representor R ι β φ) →ₐ[R] B) ≃ {α : ((MvPolynomial β R) → B) // α ∘ φ = (ignorevar R ι B)} where
+  toFun := sorry
+  invFun := sorry
+  left_inv := sorry
+  right_inv := sorry
+
+def corepresentableOfFinitePresentation  :
+    Functor.CorepresentableBy (F' R M) (CommRingCat.mkUnder R ((MvPolynomial β R) ⧸ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))) where
+      homEquiv {A} :=
+        Equiv.trans (foo4 R A (MvPolynomial β ↑R ⧸ Ideal.span {b | ∃ i, φ (MvPolynomial.X i) = b}))
+        (Equiv.trans (subtype_equiv_rep R ι β φ A) (foo5 R M ι β φ A).symm)
+      homEquiv_comp {A B} f _ := by
+        sorry
+

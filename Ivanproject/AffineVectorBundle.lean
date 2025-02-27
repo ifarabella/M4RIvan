@@ -140,15 +140,7 @@ variable (L ι β : Type) (_ : AddCommGroup L) (_ : Module R L) (K : Submodule R
       (_ : Finite ι) (_ : Finite β) (lb : Basis β R L ) (kb : Basis ι R K)
       (φ : (MvPolynomial ι R) →ₐ[R] (MvPolynomial β R))
 
-def ignorevar (B : Under R)  : (MvPolynomial ι R) →ₐ[R] B where
-  toFun := MvPolynomial.aeval (fun _ => 0)
-  map_one' := map_one (MvPolynomial.aeval fun _ ↦ 0)
-  map_mul' := fun x y ↦ map_mul (MvPolynomial.aeval fun _ ↦ 0) x y
-  map_zero' := rfl
-  map_add' := fun x y ↦ map_add (MvPolynomial.aeval fun _ ↦ 0) x y
-  commutes' := fun r ↦ AlgHom.commutes (MvPolynomial.aeval fun _ ↦ 0) r
-
-def ignorevar' (B : Under R)  : (MvPolynomial ι R) →ₐ[R] B := MvPolynomial.aeval (0 : ι → B)
+def ignorevar (B : Under R)  : (MvPolynomial ι R) →ₐ[R] B := MvPolynomial.aeval (0 : ι → B)
 
 abbrev representor := ((MvPolynomial β R) ⧸ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))
 --from exactness
@@ -158,71 +150,64 @@ abbrev foo5 (B : Under R) : (M →ₗ[R] B) ≃ {α : ((MvPolynomial β R) →�
   left_inv := sorry
   right_inv := sorry
 
-abbrev subtype_equiv_rep' (B : Under R) : ((representor R ι β φ) →ₐ[R] B) ≃ {α : ((MvPolynomial β R) →ₐ[R] B) // AlgHom.comp α φ = (ignorevar' R ι B)} where
-  toFun f := by
-    let a := AlgHom.comp f (Ideal.Quotient.mkₐ R (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))
-    let comp := AlgHom.comp a φ
-    have h : comp = ignorevar' R ι B := by
-      ext x
-      unfold comp
-      unfold ignorevar'
-      simp only [AlgHom.coe_comp, Function.comp_apply, MvPolynomial.aeval_X, Pi.zero_apply]
-      unfold a
-      have h1 : ∀ (i : ι), ((Submodule.Quotient.mk : (MvPolynomial β R) → (representor R ι β φ)) (φ (MvPolynomial.X i))) = 0 := by
-        intro i
-        have h2 : (φ (MvPolynomial.X i)) ∈ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) := by
-          have h3 : (φ (MvPolynomial.X i)) ∈ {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b} := by
-            simp only [Set.mem_setOf_eq, exists_apply_eq_apply]
-          exact (Ideal.mem_span (φ (MvPolynomial.X i))).mpr fun p a ↦ a h3
-        exact (Submodule.Quotient.mk_eq_zero (Ideal.span {b | ∃ i, φ (MvPolynomial.X i) = b})).mpr h2
-      have h2 : ∀ (i : ι),  comp (MvPolynomial.X i) = 0:= by
-        intro i
-        unfold comp
-        unfold a
-        specialize h1 i
-        exact (TwoSidedIdeal.mem_ker f).mp (congrArg (⇑f) h1)
-      exact h2 x
-    exact ⟨a, h⟩
+lemma comp_mem (B : Under R) (f : representor R ι β φ →ₐ[↑R] ↑B.right) :
+    AlgHom.comp (AlgHom.comp f
+      (Ideal.Quotient.mkₐ R
+        (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))) φ = ignorevar R ι B := by
+  ext x
+  unfold ignorevar
+  simp only [AlgHom.coe_comp, Function.comp_apply, MvPolynomial.aeval_X, Pi.zero_apply]
+  have h1 : ∀ (i : ι), ((Submodule.Quotient.mk : (MvPolynomial β R) → (representor R ι β φ)) (φ (MvPolynomial.X i))) = 0 := by
+    intro i
+    have h2 : (φ (MvPolynomial.X i)) ∈ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) := by
+      have h3 : (φ (MvPolynomial.X i)) ∈ {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b} := by
+        simp only [Set.mem_setOf_eq, exists_apply_eq_apply]
+      exact (Ideal.mem_span (φ (MvPolynomial.X i))).mpr fun p a ↦ a h3
+    exact (Submodule.Quotient.mk_eq_zero (Ideal.span {b | ∃ i, φ (MvPolynomial.X i) = b})).mpr h2
+  let comp := AlgHom.comp (AlgHom.comp f
+      (Ideal.Quotient.mkₐ R
+        (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))) φ
+  have h2 : ∀ (i : ι),  comp (MvPolynomial.X i) = 0:= by
+    intro i
+    unfold comp
+    specialize h1 i
+    exact (TwoSidedIdeal.mem_ker f).mp (congrArg (⇑f) h1)
+  exact h2 x
 
-  invFun := sorry
-  left_inv := sorry
-  right_inv := sorry
+lemma mem_ideal_of_vanish (B : Under R) (g : {α : ((MvPolynomial β R) →ₐ[R] B) // AlgHom.comp α φ = (ignorevar R ι B)}) :
+    ∀ a ∈ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}), g.val a = 0 := by
+  --intro a ha
+  --let hg := g.property
+  have h : ∀ (a : (MvPolynomial β R)), a ∈ {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b} → g.val a = 0 := by
+    intro a ha
+    cases' ha with i hi
+    rw [← hi]
+    let hg := g.property
+    have h1 : (AlgHom.comp g φ) (MvPolynomial.X i)  = (ignorevar R ι B) (MvPolynomial.X i) :=
+      congrFun (congrArg DFunLike.coe hg) (MvPolynomial.X i)
+    simp only [AlgHom.coe_comp, Function.comp_apply] at h1
+    rw [h1]
+    unfold ignorevar
+    simp only [MvPolynomial.aeval_X, Pi.zero_apply]
 
-abbrev subtype_equiv_rep (B : Under R) : ((representor R ι β φ) →ₐ[R] B) ≃ {α : ((MvPolynomial β R) → B) // α ∘ φ = (ignorevar R ι B)} where
-  toFun f := by
-    unfold representor at f
-    let a := @LinearMap.comp _ _ _ (MvPolynomial β ↑R)
-      (MvPolynomial β ↑R ⧸ Ideal.span {b | ∃ i, φ (MvPolynomial.X i) = b}) (↑B.right) _ _ _ _ _ _ _ _ _
-        (RingHom.id R) (RingHom.id R) (RingHom.id R) _ f (Submodule.mkQ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))
-    let comp := @LinearMap.comp _ _ _ (MvPolynomial ι R) (MvPolynomial β R) B _ _ _ _ _ _ _ _ _
-      (RingHom.id R) (RingHom.id R) (RingHom.id R) _ a φ
-    --let a := @MvPolynomial.aeval R B β _ _ _ ((fun j => f (Submodule.Quotient.mk (MvPolynomial.X j))) : β → B)
-    have h1 : ∀ (i : ι), ((Submodule.Quotient.mk : (MvPolynomial β R) → (representor R ι β φ)) (φ (MvPolynomial.X i))) = 0 := by
-      intro i
-      have h2 : (φ (MvPolynomial.X i)) ∈ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) := by
-        have h3 : (φ (MvPolynomial.X i)) ∈ {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b} := by sorry
-        exact (Ideal.mem_span (φ (MvPolynomial.X i))).mpr fun p a ↦ a h3
-      exact (Submodule.Quotient.mk_eq_zero (Ideal.span {b | ∃ i, φ (MvPolynomial.X i) = b})).mpr h2
-    have h2 : ∀ (i : ι),  comp (MvPolynomial.X i) = 0:= by
-      intro i
-      unfold comp
-      unfold a
-      specialize h1 i
-      exact (TwoSidedIdeal.mem_ker f).mp (congrArg (⇑f) h1)
-    have h3 : comp = (ignorevar R ι B) := by
-      have h : ∀ (i : ι), comp (MvPolynomial.X i) = (ignorevar R ι B) (MvPolynomial.X i) := by
-        intro i
-        specialize h2 i
-        rw [h2]
-        unfold ignorevar
-        simp only [AlgHom.mk_coe, MvPolynomial.aeval_X]
-      have hC : ∀ (r : R), comp (MvPolynomial.C r) = (ignorevar R ι B) (MvPolynomial.C r) := by sorry
+  --Submodule.closure_induction?
+  sorry
 
-      sorry
+abbrev subtype_equiv_rep (B : Under R) : ((representor R ι β φ) →ₐ[R] B) ≃ {α : ((MvPolynomial β R) →ₐ[R] B) // AlgHom.comp α φ = (ignorevar R ι B)} where
+  toFun f := ⟨AlgHom.comp f (Ideal.Quotient.mkₐ R (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b})), comp_mem R ι β φ B f⟩
+  invFun g := Ideal.Quotient.liftₐ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) g (mem_ideal_of_vanish R ι β φ B g)
+  left_inv f := by
+    ext x
+    simp only [Ideal.Quotient.liftₐ_apply]
+    --let h := Ideal.Quotient.liftₐ_comp (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) g (mem_ideal_of_vanish R ι β φ B g)
+    unfold mem_ideal_of_vanish
+    unfold comp_mem
+
     sorry
-  invFun := sorry
-  left_inv := sorry
-  right_inv := sorry
+  right_inv g := by
+    ext x
+    simp only [AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk, Function.comp_apply,
+      Ideal.Quotient.liftₐ_apply, Ideal.Quotient.lift_mk, RingHom.coe_coe]
 
 def corepresentableOfFinitePresentation  :
     Functor.CorepresentableBy (F' R M) (CommRingCat.mkUnder R ((MvPolynomial β R) ⧸ (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}))) where

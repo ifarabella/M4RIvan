@@ -23,6 +23,7 @@ lemma foo'' (N : Type) [AddCommGroup N] [Module R N] (g : M ≃ₗ[R] N) : Modul
 variable (R S M : Type) [CommRing R] [CommRing S] [AddCommGroup M] [Module R M]
     [Module S M] [Algebra R S] (N : Submodule R M)
 
+
 --example (P : PrimeSpectrum R) (h1 : Module.Projective R (M ⧸ N)) (h2 : Module.rankAtStalk (M ⧸ N) (Submodule.comap (algebraMap R S) P) = d) :
    --Module.rankAtStalk (S ⊗[R] (M ⧸ N)) P
 section
@@ -74,4 +75,3 @@ example (f : M →ₗ[R] N) [Module (Localization S) M] [Module (Localization S)
     IsLinearMap (Localization S) f where
       map_add :=  LinearMap.map_add f
       map_smul c x := localsmul S M N f c x
-

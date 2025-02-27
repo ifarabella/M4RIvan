@@ -81,6 +81,13 @@ noncomputable def Grass : Under R₀ ⥤ Type where
     --ext y z
     simp only [CommRingCat.toAlgHom_comp, typemap_val, types_comp_apply]
     unfold typemap
+    simp only
+    ext M x
+    simp only [types_comp_apply]
+
+    let h := @map'_comm V₀ R₀ _ _ _ _ X Y sorry sorry Z sorry sorry sorry M sorry sorry
+    
     --have h :
+
     sorry
     --have h : typemap d V₀ R₀ X Z M = (typemap d V₀ R₀ X Y M typemap d V₀ R₀ Y Z M

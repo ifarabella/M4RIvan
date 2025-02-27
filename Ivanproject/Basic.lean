@@ -259,6 +259,7 @@ def mymodMapequiv (M : Submodule R (R ⊗[R₀] V₀)) :=
 lemma map_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
     [IsScalarTower R₀ R T] : (myModMap V₀ R₀ T M) = myModMap V₀ R₀ T (LinearMap.range (myModMap V₀ R₀ S M)) := by sorry
 -/
+@[simp]
 lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
     [IsScalarTower R₀ R T] [IsScalarTower R S T] : myModMap' V₀ R₀ T M = myModMap' V₀ R₀ T (myModMap' V₀ R₀ S M) := by
   rw [← mymodeq, ← mymodeq, ← mymodeq]
@@ -267,8 +268,10 @@ lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra
   · intro ⟨trv, ⟨⟨tm, h12⟩, h2⟩⟩
     refine ⟨?_, ⟨⟨?_, ?_⟩, ?_⟩⟩
     · use ((AlgebraTensorModule.cancelBaseChange (↑R₀) (↑S.right) (↑T.right) (↑T.right) V₀).symm tv)
-    · let tim := (LinearMap.baseChange T (myModMap V₀ R₀ S M)) (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
+    · let tim' := (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
+      let tim := (LinearMap.rangeRestrict (LinearMap.baseChange T (myModMap V₀ R₀ S M))) tim'
       rw [mymodeq, myModMap']
+
       sorry
     · rw [← h2]
       sorry
@@ -287,7 +290,8 @@ lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra
       use (AlgebraTensorModule.cancelBaseChange R₀ R T T V₀).symm tv
     · simp only [SetLike.mem_coe, LinearMap.mem_range]
       constructor
-      · 
+      · cases' y with z hz
+        --rw [mem_range] at z
         sorry
       · sorry
 

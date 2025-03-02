@@ -213,6 +213,10 @@ def myModMap' (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V�
   -- Now take the image (LinearMap.range)
   LinearMap.range (myModMap V₀ R₀ S M)
   --M.map ((IsScalarTower.toAlgHom R₀ R S).toLinearMap.rTensor V₀)
+variable (S) in
+def myModMap'' (M : Submodule R (R ⊗[R₀] V₀)) : Submodule S (S ⊗[R₀] V₀) :=
+    (Submodule.map (AlgebraTensorModule.cancelBaseChange R₀ R S S V₀)
+          (LinearMap.range (LinearMap.baseChange S M.subtype)))
 
 --def myFunct (d : ℕ) : CommRingCat ⥤ Type _ where
   --obj R := {M : Submodule R ((Fin n) → R) // Module.Projective R ((Fin n → R)⧸M) ∧ (∀ P : PrimeSpectrum R, Module.rankAtStalk ((Fin n → R)⧸M) P = d) }
@@ -259,7 +263,28 @@ def mymodMapequiv (M : Submodule R (R ⊗[R₀] V₀)) :=
 lemma map_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
     [IsScalarTower R₀ R T] : (myModMap V₀ R₀ T M) = myModMap V₀ R₀ T (LinearMap.range (myModMap V₀ R₀ S M)) := by sorry
 -/
-@[simp]
+/-
+lemma triplecom {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
+    [IsScalarTower R₀ R T] [IsScalarTower R S T] :
+    (LinearMap.baseChange T
+      (Submodule.map (AlgebraTensorModule.cancelBaseChange R₀ R S S V₀)
+          (LinearMap.range (LinearMap.baseChange S M.subtype))).subtype) ∘ (LinearMap.baseChange T (LinearMap.rangeRestrict (myModMap V₀ R₀ S M))) ∘ (AlgebraTensorModule.cancelBaseChange R₀ S T T V₀)
+            = (AlgebraTensorModule.cancelBaseChange R₀ S T T V₀).symm ∘ (AlgebraTensorModule.cancelBaseChange R₀ R T T V₀) ∘ (LinearMap.baseChange T M.subtype) := by sorry
+-/
+lemma map''_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
+    [IsScalarTower R₀ R T] [IsScalarTower R S T] : myModMap'' V₀ R₀ T M = myModMap'' V₀ R₀ T (myModMap'' V₀ R₀ S M) := by
+  unfold myModMap''
+  let h := @LinearMap.range_comp _ _ _ (T ⊗[R] M) (T ⊗[R] R ⊗[R₀] V₀) (T ⊗[R₀] V₀) _ _ _ _ _ _ _ _ _ _ _ (RingHom.id T) _ _ _ _ (LinearMap.baseChange T M.subtype) (AlgebraTensorModule.cancelBaseChange R₀ R T T V₀)
+  --let h := LinearMap.range_comp (LinearMap.baseChange T M.subtype) ((AlgebraTensorModule.cancelBaseChange R₀ R T T V₀) : T ⊗[R] R ⊗[R₀] V₀ ≃ₗ[T] T ⊗[R₀] V₀)
+  ext x
+  simp only [Submodule.mem_map, LinearMap.mem_range, exists_exists_eq_and]
+  constructor
+  · intro ⟨tm, h2⟩
+    sorry
+  · sorry
+
+set_option maxHeartbeats 300000
+--@[simp]
 lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra R T] (M : Submodule R (R ⊗[R₀] V₀))
     [IsScalarTower R₀ R T] [IsScalarTower R S T] : myModMap' V₀ R₀ T M = myModMap' V₀ R₀ T (myModMap' V₀ R₀ S M) := by
   rw [← mymodeq, ← mymodeq, ← mymodeq]
@@ -267,13 +292,23 @@ lemma map'_comm {T : Under R₀} [Algebra S T] [IsScalarTower R₀ S T] [Algebra
   constructor
   · intro ⟨trv, ⟨⟨tm, h12⟩, h2⟩⟩
     refine ⟨?_, ⟨⟨?_, ?_⟩, ?_⟩⟩
-    · use ((AlgebraTensorModule.cancelBaseChange (↑R₀) (↑S.right) (↑T.right) (↑T.right) V₀).symm tv)
-    · let tim' := (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
-      let tim := (LinearMap.rangeRestrict (LinearMap.baseChange T (myModMap V₀ R₀ S M))) tim'
-      rw [mymodeq, myModMap']
+    · let x1 := ((AlgebraTensorModule.cancelBaseChange R₀ S T T V₀).symm tv)
+      use x1
+    · rw [mymodeq, myModMap']
+      let x2 := (LinearMap.baseChange T (LinearMap.rangeRestrict (myModMap V₀ R₀ S M))) (((AlgebraTensorModule.cancelBaseChange R S T T M).symm) tm)
+      use x2
+    · simp only [eq_mpr_eq_cast, cast_eq]
+      let f := (LinearMap.baseChange (↑T.right)
+      (Submodule.map (AlgebraTensorModule.cancelBaseChange R₀ R S S V₀)
+          (LinearMap.range (LinearMap.baseChange S M.subtype))).subtype)
+      rw [mymodeq] at f
+      let z := ((LinearMap.baseChange (↑T.right) (myModMap V₀ R₀ S M).rangeRestrict)
+        ((AlgebraTensorModule.cancelBaseChange ↑R.right ↑S.right ↑T.right ↑T.right ↥M).symm tm))
+      have h : f z = (AlgebraTensorModule.cancelBaseChange (↑R₀) (↑S.right) (↑T.right) (↑T.right) V₀).symm tv := by
 
-      sorry
-    · rw [← h2]
+        sorry
+      rw [← h]
+
       sorry
     · simp only [LinearEquiv.apply_symm_apply]
   · intro ⟨x, y⟩

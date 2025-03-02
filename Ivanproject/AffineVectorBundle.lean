@@ -126,7 +126,10 @@ def corepresentableOfBasis (ι : Type) [Finite ι] (b : Basis ι R M) :
     homEquiv_comp {A B} f _ := by
       apply b.ext
       intro i
-      simp
+      simp only [F'_obj, Equiv.trans_apply, Equiv.coe_fn_mk, CommRingCat.toAlgHom_comp,
+        AlgHom.toRingHom_eq_coe, LinearEquiv.coe_toEquiv, Basis.constr_basis, foo2_apply,
+        AlgHom.coe_mk, RingHom.coe_coe, AlgHom.coe_comp, Function.comp_apply,
+        CommRingCat.toAlgHom_apply, F'_map, LinearMap.coe_comp, AlgHom.toLinearMap_apply]
 
 end section
 
@@ -202,7 +205,7 @@ abbrev subtype_equiv_rep (B : Under R) : ((representor R ι β φ) →ₐ[R] B) 
     --let h := Ideal.Quotient.liftₐ_comp (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) g (mem_ideal_of_vanish R ι β φ B g)
     unfold mem_ideal_of_vanish
     unfold comp_mem
-
+    
     sorry
   right_inv g := by
     ext x

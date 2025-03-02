@@ -83,11 +83,15 @@ noncomputable def Grass : Under R₀ ⥤ Type where
     unfold typemap
     simp only
     ext M x
-    simp only [types_comp_apply]
-
+    --simp only [types_comp_apply]
+    -- i should be able to close goal with h, i think this is just a lean question, no maths
     let h := @map'_comm V₀ R₀ _ _ _ _ X Y sorry sorry Z sorry sorry sorry M sorry sorry
-    
+    constructor
+    · intro hx
+
+      sorry
+    · sorry
     --have h :
 
-    sorry
+
     --have h : typemap d V₀ R₀ X Z M = (typemap d V₀ R₀ X Y M typemap d V₀ R₀ Y Z M

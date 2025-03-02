@@ -34,6 +34,7 @@ open OreLocalization
 open Monoid
 namespace OreLocalization
 
+
 lemma suffices1 (f : M →ₗ[R] N) [Module (Localization S) M] [Module (Localization S) N] [IsScalarTower R (Localization S) M]
     (r : R) (s : S) (x : M) :
     --(s • (f ((r /ₒ s) • x)) = r • f x)

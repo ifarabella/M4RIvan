@@ -28,10 +28,10 @@ do I need F.prod' G ?
 -/
 variable (e : F.CorepresentableBy A) (e' : G.CorepresentableBy B)
 def CorepresentableBy_of_product :
-    (F ⨯ G).CorepresentableBy (A ⨯ B) where
+    (F.prod' G ).CorepresentableBy (A × B) where
       homEquiv {Y} := sorry
       homEquiv_comp := sorry
 
 #check PiTensorProduct
 
-def Corepresentable_of_PiTensorProduct :
+def Corepresentable_of_PiTensorProduct (ι : Type) [Finite ι] :

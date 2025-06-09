@@ -1,40 +1,11 @@
 import Mathlib
 universe u
-
-/-
-suppress_compilation
-
-open MvPolynomial
-
-variable (R : Type ) [CommRing R]
-
-open GradedAlgebra
-
-open AlgebraicGeometry
-attribute [instance] gradedAlgebra
-
-variable (n : ℕ)
-
-noncomputable abbrev Pn := Proj (homogeneousSubmodule (Fin (n + 1)) ℤ)
-
-open Scheme
-
-#check Hom (Spec (.of R)) $ Pn 7
---want 2nd functor, made up of 'locally rank n direct summands of Tⁿ⁺¹, K'
---define this as Tⁿ⁺¹⧸K is an invertible module
--- an invertible T - module is a f.g. locally free T-module of rank 1.
---locally free
---class InvertibleModule (R M : Type) [CommRing R] [AddCommMonoid M] [Module R M] :
-        --Prop where
-    --out : ∃ (h1 : Module.Finite R M) (h2 : Module.Projective R M),
-    --∀ (p : Ideal R) (h4 : p.IsPrime),
-    --(Module.rank ( (Localization.AtPrime p) (Module.LocalizedModule M p)) = 1)
--/
-
 open CategoryTheory
 open TensorProduct
 
-
+/-
+In this file, we cover some ring-theoretic results concerning the Grassmannina
+-/
 lemma free_of_finite_IsLocalRing (R : Type*) [CommRing R] [IsLocalRing R] (M : Type*) [AddCommGroup M] [Module R M]
   (h : Module.Projective R M) [Module.Finite R M] : Module.Free R M := by
   let h := Module.finitePresentation_of_projective R M

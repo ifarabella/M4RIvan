@@ -6,8 +6,10 @@ open CategoryTheory
 
 variable (d : ℕ) (V₀: Type) (R₀ : CommRingCat.{0}) [AddCommGroup V₀] [Module R₀ V₀]  --(x: Under R₀)
     [Module.Projective R₀ V₀] [Module.Finite R₀ V₀]
+/-
+In this file, we (partially define the ring Grassmannian)
+-/
 
---how can i make this definition without using tactic mode
 /--given a map of R₀ -algebras, `typemap` is the induced map on the objects of the Grassmannian-/
 noncomputable def typemap (R S : Under R₀) [Algebra R S] [IsScalarTower R₀ R S] (M : myFunctorish d V₀ R₀ R) :
     myFunctorish d V₀ R₀ S :=

@@ -3,7 +3,7 @@ open CategoryTheory
 open TensorProduct
 section
 variable {R : CommRingCat} {M : Type} [AddCommGroup M] [Module R M] {n : ℕ} {x : Fin n → M}
-
+/-Some code concerning the functor F_{x,V_0} from the report-/
 noncomputable def induced (S : Under R) : (((Fin n) → S) →ₗ[S] (S ⊗[R] M)) := by sorry
 
 noncomputable def induced' (S : Under R) (b : Basis (Fin n) S (Fin n → S)) : (((Fin n) → S) →ₗ[S] (S ⊗[R] M)) :=

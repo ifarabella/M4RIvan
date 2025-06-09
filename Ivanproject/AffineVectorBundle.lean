@@ -9,6 +9,8 @@ open CategoryTheory
 
 section playground
 
+/-In this file, we formalise the corepresentability of the functor F_M from the report-/
+
 variable (R : Type) [CommRing R] (A B : Type) [CommRing A] [CommRing B]
     [Algebra R A] [Algebra R B] (M : Type) [AddCommGroup M] [Module R M]
     (N : Type) [AddCommGroup N] [Module R N]
@@ -205,7 +207,7 @@ abbrev subtype_equiv_rep (B : Under R) : ((representor R ι β φ) →ₐ[R] B) 
     --let h := Ideal.Quotient.liftₐ_comp (Ideal.span {b : MvPolynomial β R | ∃ (i : ι), (φ (MvPolynomial.X i)) = b}) g (mem_ideal_of_vanish R ι β φ B g)
     unfold mem_ideal_of_vanish
     unfold comp_mem
-    
+
     sorry
   right_inv g := by
     ext x
